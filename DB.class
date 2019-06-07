@@ -1,0 +1,315 @@
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.PrintStream;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+public class DBproject
+{
+  private Connection _connection = null;
+  static BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+  
+  public DBproject(String paramString1, String paramString2, String paramString3, String paramString4) throws SQLException {
+    System.out.print("Connecting to database...");
+    try
+    {
+      String str = "jdbc:postgresql://localhost:" + paramString2 + "/" + paramString1;
+      System.out.println("Connection URL: " + str + "\n");
+      
+
+      _connection = DriverManager.getConnection(str, paramString3, paramString4);
+      System.out.println("Done");
+    } catch (Exception localException) {
+      System.err.println("Error - Unable to Connect to Database: " + localException.getMessage());
+      System.out.println("Make sure you started postgres on this machine");
+      System.exit(-1);
+    }
+  }
+  
+
+
+
+
+
+
+  public void executeUpdate(String paramString)
+    throws SQLException
+  {
+    Statement localStatement = _connection.createStatement();
+    
+
+    localStatement.executeUpdate(paramString);
+    
+
+    localStatement.close();
+  }
+  
+
+
+
+
+
+
+
+
+  public int executeQueryAndPrintResult(String paramString)
+    throws SQLException
+  {
+    Statement localStatement = _connection.createStatement();
+    
+
+    ResultSet localResultSet = localStatement.executeQuery(paramString);
+    
+
+
+
+
+    ResultSetMetaData localResultSetMetaData = localResultSet.getMetaData();
+    int i = localResultSetMetaData.getColumnCount();
+    int j = 0;
+    
+
+    int k = 1;
+    while (localResultSet.next()) {
+      if (k != 0) {
+        for (m = 1; m <= i; m++) {
+          System.out.print(localResultSetMetaData.getColumnName(m) + "\t");
+        }
+        System.out.println();
+        k = 0;
+      }
+      for (int m = 1; m <= i; m++)
+        System.out.print(localResultSet.getString(m) + "\t");
+      System.out.println();
+      j++;
+    }
+    localStatement.close();
+    return j;
+  }
+  
+
+
+
+
+
+
+
+
+  public List<List<String>> executeQueryAndReturnResult(String paramString)
+    throws SQLException
+  {
+    Statement localStatement = _connection.createStatement();
+    
+
+    ResultSet localResultSet = localStatement.executeQuery(paramString);
+    
+
+
+
+
+    ResultSetMetaData localResultSetMetaData = localResultSet.getMetaData();
+    int i = localResultSetMetaData.getColumnCount();
+    int j = 0;
+    
+
+    int k = 0;
+    ArrayList localArrayList1 = new ArrayList();
+    while (localResultSet.next()) {
+      ArrayList localArrayList2 = new ArrayList();
+      for (int m = 1; m <= i; m++)
+        localArrayList2.add(localResultSet.getString(m));
+      localArrayList1.add(localArrayList2);
+    }
+    localStatement.close();
+    return localArrayList1;
+  }
+  
+
+
+
+
+
+
+
+  public int executeQuery(String paramString)
+    throws SQLException
+  {
+    Statement localStatement = _connection.createStatement();
+    
+
+    ResultSet localResultSet = localStatement.executeQuery(paramString);
+    
+    int i = 0;
+    
+
+    if (localResultSet.next()) {
+      i++;
+    }
+    localStatement.close();
+    return i;
+  }
+  
+
+
+
+
+
+
+
+
+  public int getCurrSeqVal(String paramString)
+    throws SQLException
+  {
+    Statement localStatement = _connection.createStatement();
+    
+    ResultSet localResultSet = localStatement.executeQuery(String.format("Select currval('%s')", new Object[] { paramString }));
+    if (localResultSet.next()) return localResultSet.getInt(1);
+    return -1;
+  }
+  
+
+  public void cleanup()
+  {
+    try
+    {
+      if (_connection != null) {
+        _connection.close();
+      }
+    }
+    catch (SQLException localSQLException) {}
+  }
+  
+
+
+
+
+
+  public static void main(String[] paramArrayOfString)
+  {
+    if (paramArrayOfString.length != 3) {
+      System.err.println("Usage: java [-classpath <classpath>] " + DBproject.class
+        .getName() + " <dbname> <port> <user>");
+      
+      return;
+    }
+    
+    DBproject localDBproject = null;
+    try
+    {
+      System.out.println("(1)");
+      try
+      {
+        Class.forName("org.postgresql.Driver");
+      }
+      catch (Exception localException1) {
+        System.out.println("Where is your PostgreSQL JDBC Driver? Include in your library path!");
+        localException1.printStackTrace();
+        return;
+      }
+      
+      System.out.println("(2)");
+      String str1 = paramArrayOfString[0];
+      String str2 = paramArrayOfString[1];
+      String str3 = paramArrayOfString[2];
+      
+      localDBproject = new DBproject(str1, str2, str3, "");
+      
+      int i = 1;
+      while (i != 0) {
+        System.out.println("MAIN MENU");
+        System.out.println("---------");
+        System.out.println("1. Add Airline");
+        System.out.println("2. Add Plane");
+        System.out.println("3. Add Pilot");
+        System.out.println("4. Add Flight");
+        System.out.println("5. List Flights Between Dates");
+        System.out.println("6. List Planes in order of Flights");
+        System.out.println("7. List Pilots in order of Experience");
+        System.out.println("8. Get All Reports between Dates");
+        System.out.println("9. < EXIT");
+        
+        switch (readChoice()) {
+        case 1:  AddAirline(localDBproject); break;
+        case 2:  AddPlane(localDBproject); break;
+        case 3:  AddPilot(localDBproject); break;
+        case 4:  AddFlight(localDBproject); break;
+        case 5:  ListFlights(localDBproject); break;
+        case 6:  ListPlanesInOrderOfFlights(localDBproject); break;
+        case 7:  ListPilotsInOrderOfExperience(localDBproject); break;
+        case 8:  GetReportsBetweenDates(localDBproject); break;
+        case 9:  i = 0; }
+      }
+      return;
+    } catch (Exception localException3) {
+      System.err.println(localException3.getMessage());
+    } finally {
+      try {
+        if (localDBproject != null) {
+          System.out.print("Disconnecting from database...");
+          localDBproject.cleanup();
+          System.out.println("Done\n\nBye !");
+        }
+      }
+      catch (Exception localException6) {}
+    }
+  }
+  
+  public static int readChoice()
+  {
+    int i;
+    for (;;)
+    {
+      System.out.print("Please make your choice: ");
+      try {
+        i = Integer.parseInt(in.readLine());
+      }
+      catch (Exception localException) {
+        System.out.println("Your input is invalid!");
+      }
+    }
+    
+    return i;
+  }
+  
+  public static void AddAirline(DBproject paramDBproject) {}
+  
+  public static void AddPlane(DBproject paramDBproject) {}
+  
+  public static void AddPilot(DBproject paramDBproject) {}
+  
+  public static void AddFlight(DBproject paramDBproject) {}
+  
+  public static void ListFlights(DBproject paramDBproject) {}
+  
+  public static void ListPlanesInOrderOfFlights(DBproject paramDBproject) {}
+  
+  public static void ListPilotsInOrderOfExperience(DBproject paramDBproject) {}
+  
+  public static void GetReportsBetweenDates(DBproject paramDBproject) {}
+}
